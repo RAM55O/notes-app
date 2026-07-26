@@ -1,0 +1,114 @@
+name: Build Push ECR and Deploy Kubernetes
+
+
+on:
+  push:
+    branches:
+      - main
+
+
+jobs:
+
+  deploy:
+
+    runs-on: ubuntu-latest
+
+
+    steps:
+
+      # 1. Checkout Code
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+
+
+      # 2. Setup Java
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+
+
+      # 3. Build Spring Boot Application
+      - name: Build Maven Project
+        run: |
+          mvn clean package -DskipTests
+
+
+
+      # 4. Configure AWS
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+
+
+      # 5. Login ECR
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+
+
+      # 6. Build Docker Image
+      - name: Build Docker Image
+        run: |
+          docker build -t notes-app .
+
+          docker tag notes-app:latest \
+          236782813851.dkr.ecr.us-east-1.amazonaws.com/notes-app:latest
+
+
+
+      # 7. Push Image to ECR
+      - name: Push Docker Image
+        run: |
+          docker push \
+          236782813851.dkr.ecr.us-east-1.amazonaws.com/notes-app:latest
+
+
+
+      # 8. Connect Kubernetes
+      - name: Configure Kubernetes
+        uses: azure/k8s-set-context@v4
+        with:
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+
+
+      # 9. Deploy Namespace
+      - name: Deploy Namespace
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+
+
+
+      # 10. Deploy Application
+      - name: Deploy Kubernetes Resources
+        run: |
+          kubectl apply -f k8s/
+
+
+
+      # 11. Restart Deployment with New Image
+      - name: Update Kubernetes Image
+        run: |
+
+          kubectl set image deployment/notes-app \
+          notes-app=236782813851.dkr.ecr.us-east-1.amazonaws.com/notes-app:latest \
+          -n notes-app
+
+
+
+      # 12. Check Deployment
+      - name: Verify Deployment
+        run: |
+
+          kubectl rollout status deployment/notes-app -n notes-app
+
+          kubectl get pods -n notes-app
