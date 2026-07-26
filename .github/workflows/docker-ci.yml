@@ -35,4 +35,4 @@ jobs:
 
       - name: Push Docker Image
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/notes-app:latest
+          docker push ${{ vars.DOCKER_USERNAME }}/notes-app:latest
