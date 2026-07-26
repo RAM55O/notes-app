@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes App</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <script th:src="@{/js/app.js}" defer></script>
+</head>
+<body>
+<div class="page-shell">
+    <header class="hero">
+        <div>
+            <p class="eyebrow">Simple Spring Boot Notes</p>
+            <h1>Write, edit, search, and delete notes.</h1>
+            <p class="hero-copy">Keep a subject and a note body together in one lightweight app that runs in Docker.</p>
+        </div>
+    </header>
+
+    <section class="card form-card">
+        <h2>Create a Note</h2>
+        <form th:action="@{/notes}" th:object="${noteForm}" method="post" class="note-form">
+            <input type="hidden" name="q" th:value="${query}">
+            <label>
+                Subject
+                <input type="text" th:field="*{subject}" maxlength="120" placeholder="Meeting summary">
+                <span class="error" th:if="${#fields.hasErrors('subject')}" th:errors="*{subject}"></span>
+            </label>
+            <label>
+                Note
+                <textarea th:field="*{content}" rows="5" placeholder="Write the note here..."></textarea>
+                <span class="error" th:if="${#fields.hasErrors('content')}" th:errors="*{content}"></span>
+            </label>
+            <button type="submit" class="primary-button">Save Note</button>
+        </form>
+    </section>
+
+    <section class="card search-card">
+        <form th:action="@{/}" method="get" class="search-form">
+            <input type="search" name="q" th:value="${query}" placeholder="Search by subject or note text">
+            <button type="submit">Search</button>
+            <a th:href="@{/}" class="secondary-link">Clear</a>
+        </form>
+    </section>
+
+    <section class="flash" th:if="${message}" th:text="${message}"></section>
+
+    <section class="notes-grid">
+        <article class="card note-card" th:each="note : ${notes}">
+            <div class="note-top">
+                <h3 th:text="${note.subject}">Subject</h3>
+                <span class="timestamp" th:text="${#temporals.format(note.updatedAt, 'dd MMM yyyy HH:mm')}">Date</span>
+            </div>
+            <p class="note-body" th:text="${note.content}">Note text</p>
+            <div class="actions">
+                <a th:href="@{/notes/{id}/edit(id=${note.id})}" class="action-link">Edit</a>
+                <form th:action="@{/notes/{id}/delete(id=${note.id})}" method="post" class="inline-form delete-form">
+                    <button type="submit" class="danger-button" data-confirm="Delete this note?">Delete</button>
+                </form>
+            </div>
+        </article>
+    </section>
+
+    <section class="empty-state card" th:if="${#lists.isEmpty(notes)}">
+        <p>No notes found.</p>
+    </section>
+</div>
+</body>
+</html>

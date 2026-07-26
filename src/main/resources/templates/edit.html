@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Note</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="page-shell narrow-shell">
+    <section class="card form-card">
+        <div class="top-row">
+            <h1>Edit Note</h1>
+            <a th:href="@{/}" class="secondary-link">Back</a>
+        </div>
+        <form th:action="@{/notes/{id}(id=${noteForm.id})}" th:object="${noteForm}" method="post" class="note-form">
+            <label>
+                Subject
+                <input type="text" th:field="*{subject}" maxlength="120">
+                <span class="error" th:if="${#fields.hasErrors('subject')}" th:errors="*{subject}"></span>
+            </label>
+            <label>
+                Note
+                <textarea th:field="*{content}" rows="8"></textarea>
+                <span class="error" th:if="${#fields.hasErrors('content')}" th:errors="*{content}"></span>
+            </label>
+            <div class="actions">
+                <button type="submit" class="primary-button">Update Note</button>
+                <a th:href="@{/}" class="secondary-link">Cancel</a>
+            </div>
+        </form>
+    </section>
+</div>
+</body>
+</html>
